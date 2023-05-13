@@ -1,0 +1,74 @@
+import streamlit as st
+import pandas as pd
+import numpy as np
+import pickle
+from PIL import Image
+
+model = pickle.load(open('linear_model_result_centaline.sav', 'rb'))
+
+st.title('Hong Kong Housing Price Prediction')
+image = image.open('hong-kong-mountain-top-view.jpg')
+st.image(image)
+
+
+district_option = st.selectbox(
+  'eighteen_district',
+    ('Sai Kung', 'Sha Tin', 'Central and Western', 
+    'Yau Tsim Mong', 'Kowloon City', Kwun Tong', 
+    'Yuen Long', 'Tuen Mun', 'Northern District', 
+    'Kwai Tsing', 'Sham Shui Po', 'Wan Chai', 
+    'Southern District', 'Eastern District', 'Tsuen Wan', 
+    'Wong Tai Sin', 'Tai Po', 'Islands')
+)
+st.write('You selected: 'district_option)
+
+estateType_option = st.selectbox(
+  'Estate Type',
+  ('Phase', 'Normal', 'Single')
+)
+st.write('You selected: ', estateType_option)
+
+floor_option = st.selectbox(
+  'Floor',
+  ('Upper Floor', 'Middle Floor', 'Lower Floor')
+)
+st.write('You selected: ', floor_option)
+
+direction_option = st.selectbox(
+  'Direction',
+  ('East', 'South East', 'South', South West', 'West', North West', 'North', 'North East')
+)
+st.write('You selected: ', direction_option)
+
+bedroomCount_num = st.number_input('Bedroom Count', 0, 20)
+nArea_num = st.number_input('Input Net Area', 0, 10000)
+gArea_num = st.number_input('Input Gross Area', 0, 10000)
+mtr_walkMinutes = st.number_input('Input MTR Walk Minute', 0, 10000)
+buildingAge = st.number_input('Input Building Age', 0, 70)
+
+with open('linear_model_result_centaline.sav', 'rb') as fp
+  model, encoder = pickle.load(fp)
+  encoder.handle_unknown = 'ignore'
+  
+input_vector = [
+  district_option, estateType_option, floor_option, direction_option,
+  bedroomCount_num, nArea_num, gArea_num, mtr_walkMinutes, buildingAge
+]
+
+def predict():
+  x_test = pd.Series(input_vector, index = ['eighteen_district', 'estateType', 'floor', 
+                                            'direction' 'bedroomCount', 'nArea',
+                                            'gArea', 'mtr_walkMinutes', 'buildingAge']).to_frame().T
+                                            
+one_hot_features = encoder.transform(x_test[['estateType', 'floor', 'direction', 'eighteen_district']])
+
+x_test_f = np.hstack([
+  X_test[['nArea', 'bedroomCount', 'gArea', 'mtr_walkMinutes', 'buildingAge']],
+  one_hot_features.toarray()
+])
+
+pred = model.predict(x_test_f)
+st.write('The estimated value of this flat is $: ', round(pred[0], 1))
+
+if st.button('Predict', on_click = predict):
+  predict()
