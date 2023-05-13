@@ -1,0 +1,55 @@
+! gcloud auth application-default login
+
+import pandas as pd
+import pandas_gbq
+sql = """
+
+df = pandas_gbq.read_gbq(sql, project_id = 'centaline2023')
+
+df.info()
+df.head()
+df.corr()
+df.dropna(inplace = True)
+
+import sklearn
+from sklearn.model_selection import train_test_split
+x = df.drop('price', axis = 1)
+y = df.price
+x_train, x_test, y_train, y_test = train_test_split(x, y, random_state = 87, train_size = 0.8)
+
+print(x_train.shape[0])
+print(x_test.shape[0])
+print(y_train.shape[0])
+print(y_test.shape[0])
+
+# One Hot Encoding for Categorical Variables
+from sklearn.preprocessing import OneHotEncoder
+import numpy as np
+
+encoder = OneHotEncoder(handle_unknown = 'ignore')
+x_train_np = encoder.fit_transform(x_train[['estateType', 'floor', 'direction', 'eighteen_district']])
+x_test_np = encoder.fit_transform(x_test[['estateType', 'floor', 'direction', 'eighteen_district']])
+
+x_train_f = np.hstack([x_train['nArea', 'bedroomCount', 'gArea','mtr_walkMinutes', 'buildingAge']], x_train_np.toarray()])
+x_test_f = np.hstack([x_test['nArea', 'bedroomCount', 'gArea','mtr_walkMinutes', 'buildingAge']], x_test_np.toarray()])
+
+x_test_f
+
+# Apply Linear Regression
+from sklearn.linear_model import LinearRegression
+lm = LinearRegression()
+lm.fit(x_train_f, y_train)
+
+print(lm.intercept_)
+
+encoder = OneHotEncoder(handle_unknown = 'ignore')
+one_hot_features = encoder.fit_transform(x[['estateType', 'floor', 'direction', 'eighteen_district']])
+
+x_train = np.hstack([x['nArea', 'bedroomCount', 'gArea','mtr_walkMinutes', 'buildingAge']], x_train_np.toarray()])
+lm = LinearRegression()
+lm.fit(x_train_f, y)
+
+# Export Model
+import pickle
+filename = 'linear_model_result_centaline.sav'
+pickle.dump((lm, encoder), open(filename, 'wb'))
