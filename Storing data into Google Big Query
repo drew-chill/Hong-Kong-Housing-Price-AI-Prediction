@@ -1,0 +1,61 @@
+import pandas as pd
+import requests
+import time
+import random
+import pandas_gbq
+from datetime import datetime
+
+api_url="https://hk.centanet.com/findproperty/api/Transaction/Search"
+
+headers = { 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537'
+        }
+
+payload = { 'postType': 'Buy', 'day': "Day180", 'sort': 'InsOrRegDate',
+            'order': 'Descending', 'size': 24, 'offset': 24, 'pageSource': 'search'}
+
+p = 0
+while True:
+    time.sleep(random.random() + 0.5)
+    payload['offset'] = p
+    print(p)
+
+    res = requests.post(api_url, headers = headers, json = payload)
+    if len(res.json()['data']) == 0:
+        break
+    p += 24
+    if p > 28:
+        break
+
+    for item in res.json()['data']:
+        building = {}
+        building['insDate'] = item['insDate']
+        building['address'] = item['address']
+        building['buildingName'] = item['buildingName']
+        building['whole_address'] = item['displayText']['addr']['line1']
+        building['address'] = item['address']
+        building['price'] = item['transcationPrice']
+
+        try:
+            building['districtName'] = item['districtName']
+            building['bigEstateName'] = item['bigEstateName']
+            building['estateName'] = item['estateName']
+            building['estateType'] = item['estateType']
+            building['terr'] = item['scope']['terr']
+            building['gArea'] = item['gUnitPrice']
+            building['gUnitPrice'] = item['gUnitPrice']
+            building['nArea'] = item['nArea']
+            building['nUnitPrice'] = item['nUnitPrice']
+            building['floor'] = item['yAxis']
+            building['flat'] = item['xAxis']
+            building['direction'] = item['direction']
+            building['bedroomCount'] = item['bedroomCount']
+        
+        except:
+            pass
+        all.append(building)
+
+df = pd.DataFrame(all)
+print(df)
+# df = df.drop_duplicates(subnet=['address', 'buildingName', 'flat'])
+# df['created_at'] = datetime.now()
+pandas_gbq.to_gbq(df, 'centaline2023.20230411.testing', 'project_id'=='Centaline2023')
